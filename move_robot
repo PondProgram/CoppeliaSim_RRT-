@@ -1,0 +1,112 @@
+sim = require('sim')
+simUI = require('simUI')
+
+function moveforward()
+    -- Move forward by setting the velocity of all wheels to positive
+    sim.setJointTargetVelocity(wheelJoints[1], forwBackVelRange[2]) -- Front left
+    sim.setJointTargetVelocity(wheelJoints[2], forwBackVelRange[2]) -- Rear left
+    sim.setJointTargetVelocity(wheelJoints[3], forwBackVelRange[2]) -- Rear right
+    sim.setJointTargetVelocity(wheelJoints[4], forwBackVelRange[2]) -- Front right
+end
+
+function movebackward()
+    -- Move backward by setting the velocity of all wheels to negative
+    sim.setJointTargetVelocity(wheelJoints[1], forwBackVelRange[1])
+    sim.setJointTargetVelocity(wheelJoints[2], forwBackVelRange[1])
+    sim.setJointTargetVelocity(wheelJoints[3], forwBackVelRange[1])
+    sim.setJointTargetVelocity(wheelJoints[4], forwBackVelRange[1])
+end
+
+function moveleft()
+    -- Strafe left by adjusting wheel velocities for Mecanum wheels
+    sim.setJointTargetVelocity(wheelJoints[1], leftRightVelRange[1]) -- Front left wheel moves backward
+    sim.setJointTargetVelocity(wheelJoints[2], leftRightVelRange[2]) -- Rear left wheel moves forward
+    sim.setJointTargetVelocity(wheelJoints[3], leftRightVelRange[1]) -- Rear right wheel moves backward
+    sim.setJointTargetVelocity(wheelJoints[4], leftRightVelRange[2]) -- Front right wheel moves forward
+end
+
+function moveright()
+    -- Strafe right by adjusting wheel velocities for Mecanum wheels
+    sim.setJointTargetVelocity(wheelJoints[1], leftRightVelRange[2]) -- Front left wheel moves forward
+    sim.setJointTargetVelocity(wheelJoints[2], leftRightVelRange[1]) -- Rear left wheel moves backward
+    sim.setJointTargetVelocity(wheelJoints[3], leftRightVelRange[2]) -- Rear right wheel moves forward
+    sim.setJointTargetVelocity(wheelJoints[4], leftRightVelRange[1]) -- Front right wheel moves backward
+end
+
+
+
+function rotleft()
+    -- Rotate left by making the wheels rotate in opposite directions
+    sim.setJointTargetVelocity(wheelJoints[1], rotVelRange[1]) -- Front left
+    sim.setJointTargetVelocity(wheelJoints[2], rotVelRange[1]) -- Rear left
+    sim.setJointTargetVelocity(wheelJoints[3], rotVelRange[2]) -- Rear right
+    sim.setJointTargetVelocity(wheelJoints[4], rotVelRange[2]) -- Front right
+end
+
+function rotright()
+    -- Rotate right by making the wheels rotate in opposite directions
+    sim.setJointTargetVelocity(wheelJoints[1], rotVelRange[2])
+    sim.setJointTargetVelocity(wheelJoints[2], rotVelRange[2])
+    sim.setJointTargetVelocity(wheelJoints[3], rotVelRange[1])
+    sim.setJointTargetVelocity(wheelJoints[4], rotVelRange[1])
+end
+
+function stop()
+    -- Stop all wheels
+    sim.setJointTargetVelocity(wheelJoints[1], 0)
+    sim.setJointTargetVelocity(wheelJoints[2], 0)
+    sim.setJointTargetVelocity(wheelJoints[3], 0)
+    sim.setJointTargetVelocity(wheelJoints[4], 0)
+end
+
+function sysCall_init()
+    v = sim.getInt32Param(sim.intparam_program_version)
+    if (v < 20412) then
+        sim.displayDialog('Warning', 'The Mecanum model is only fully supported from CoppeliaSim version 2.4.12 and above.', sim.dlgstyle_ok, false, '', nil, {0.8, 0, 0, 0, 0, 0})
+    end
+
+    youBot = sim.getObjectHandle('/turbo')
+    wheel_radius = 0.06
+    max_speed = 1.0
+    max_turn = 0.05
+    speed = 0
+    turn = 0
+    b = 0.02
+    ui = simUI.create('<ui enabled="true" modal="false" title="Mecanum Control" layout="vbox" placement="relative" position="20,20">' ..
+        [[
+     <button enabled="true" text="Forward" on-click="moveforward"></button>
+     <button enabled="true" text="Backward" on-click="movebackward"></button>
+     <button enabled="true" text="Left" on-click="moveleft"></button>
+     <button enabled="true" text="Right" on-click="moveright"></button>
+     <button enabled="true" text="Rotate Left" on-click="rotleft"></button>
+     <button enabled="true" text="Rotate Right" on-click="rotright"></button>
+     <button enabled="true" text="Stop" on-click="stop"/>
+     </ui>]])
+
+    -- Define velocity ranges for movement
+    forwBackVelRange = {-240 * math.pi / 180, 240 * math.pi / 180}
+    leftRightVelRange = {-240 * math.pi / 180, 240 * math.pi / 180}
+    rotVelRange = {-90 * math.pi / 180, 90 * math.pi / 180}
+
+    -- Initialize the wheel joints (front left, rear left, rear right, front right)
+    wheelJoints = {-1, -1, -1, -1}
+    wheelJoints[1] = sim.getObjectHandle('/wheel_FL_1_joint')
+    wheelJoints[2] = sim.getObjectHandle('/wheel_RL_1_joint')
+    wheelJoints[3] = sim.getObjectHandle('/wheel_RR_1_joint')
+    wheelJoints[4] = sim.getObjectHandle('/wheel_FR_1_joint')
+
+    -- Stop the wheels initially
+    stop()
+end
+
+function sysCall_actuation()
+
+end
+
+function sysCall_sensing()
+
+end
+
+function sysCall_cleanup()
+    -- Do cleanup
+end
